@@ -1,7 +1,8 @@
 # import 新增
 # from pose_engine import run_2d_pose  # 新增
 from pose_2d_engine import run_2d_pose
-from pose3d_viewer import run_3d_pose, Pose3DViewer, show_pose3d_window, get_3d_keypoints  # 新增
+from pose_3d_engine import run_3d_pose
+from pose3d_viewer import Pose3DViewer, show_pose3d_window, get_3d_keypoints  # 新增
 from pyqt_3d_viewer import Pose3DViewer
 
 import os
@@ -63,9 +64,9 @@ class PoseEstimationUI(QMainWindow):
         btn_run.clicked.connect(self.run_pose_estimation)
         layout.addWidget(btn_run)
         
-        # btn_run3d = QPushButton("Run 3D Pose Estimation")
-        # btn_run3d.clicked.connect(self.run_pose_estimation_3d)
-        # layout.addWidget(btn_run3d)
+        btn_run3d = QPushButton("Run 3D Pose Estimation")
+        btn_run3d.clicked.connect(self.run_pose_estimation_3d)
+        layout.addWidget(btn_run3d)
 
         container = QWidget()
         container.setLayout(layout)
@@ -93,7 +94,7 @@ class PoseEstimationUI(QMainWindow):
             self.label.setText("No image selected!")
             return
 
-        output_dir = "./../vis_results"
+        output_dir = "./../2d_results"
         os.makedirs(output_dir, exist_ok=True)
 
         success = run_2d_pose(
@@ -111,26 +112,31 @@ class PoseEstimationUI(QMainWindow):
             self.label.setText("Pose estimation complete!")
         else:
             self.label.setText("Failed to run pose estimation.")
+            
+    def run_pose_estimation_3d(self):  # 這裡用你目前寫的版本
+        if not self.image_path:
+            self.label.setText("No image selected!")
+            return
+
+        output_dir = "./../3d_results"
+        os.makedirs(output_dir, exist_ok=True)
+
+        success = run_3d_pose(
+            img_path=self.image_path,
+            output_dir=output_dir,
+            rad=self.radius,
+            thick=self.thickness,
+            # return_data=True
+        )
+
+        if success:
+            result_img = os.path.join(output_dir, os.path.basename(self.image_path))
+            max_size = 800
+            self.img_preview.setPixmap(QPixmap(result_img).scaled(max_size, max_size, Qt.AspectRatioMode.KeepAspectRatio))
+            self.label.setText("3D Pose estimation complete!")
+        else:
+            self.label.setText("Failed to run 3D pose estimation.")
     
-    # def run_pose_estimation_3d(self):
-    #     if not self.image_path:
-    #         self.label.setText("No image selected!")
-    #         return
-
-    #     self.label.setText("Running 2D pose estimation...")
-    #     try:
-    #         det_results, pose2d_results = run_2d_pose(self.image_path, device='cpu')
-    #     except Exception as e:
-    #         self.label.setText(f"2D pose estimation error: {e}")
-    #         return
-
-    #     self.label.setText("Running 3D pose estimation...")
-    #     try:
-    #         keypoints_3d_list = run_3d_pose(pose2d_results, device='cpu')
-    #     except Exception as e:
-    #         self.label.setText(f"3D pose estimation error: {e}")
-    #         return
-
         # 跳出新視窗顯示3D骨架（可旋轉）
         # show_3d_pose_window(keypoints_3d_list)
         # self.label.setText("3D pose estimation complete!")
