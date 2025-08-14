@@ -1,5 +1,6 @@
 # import 新增
-from pose_engine import run_2d_pose  # 新增
+# from pose_engine import run_2d_pose  # 新增
+from pose_2d_engine import run_2d_pose
 from pose3d_viewer import run_3d_pose, Pose3DViewer, show_pose3d_window, get_3d_keypoints  # 新增
 from pyqt_3d_viewer import Pose3DViewer
 
@@ -62,9 +63,9 @@ class PoseEstimationUI(QMainWindow):
         btn_run.clicked.connect(self.run_pose_estimation)
         layout.addWidget(btn_run)
         
-        btn_run3d = QPushButton("Run 3D Pose Estimation")
-        btn_run3d.clicked.connect(self.run_pose_estimation_3d)
-        layout.addWidget(btn_run3d)
+        # btn_run3d = QPushButton("Run 3D Pose Estimation")
+        # btn_run3d.clicked.connect(self.run_pose_estimation_3d)
+        # layout.addWidget(btn_run3d)
 
         container = QWidget()
         container.setLayout(layout)
@@ -96,11 +97,11 @@ class PoseEstimationUI(QMainWindow):
         os.makedirs(output_dir, exist_ok=True)
 
         success = run_2d_pose(
-            image_path=self.image_path,
+            img_path=self.image_path,
             output_dir=output_dir,
-            radius=self.radius,
-            thickness=self.thickness,
-            return_data=True
+            rad=self.radius,
+            thick=self.thickness,
+            # return_data=True
         )
 
         if success:
@@ -111,35 +112,26 @@ class PoseEstimationUI(QMainWindow):
         else:
             self.label.setText("Failed to run pose estimation.")
     
-    def run_pose_estimation_3d(self):
-        if not self.image_path:
-            self.label.setText("No image selected!")
-            return
+    # def run_pose_estimation_3d(self):
+    #     if not self.image_path:
+    #         self.label.setText("No image selected!")
+    #         return
 
-        # 執行2D推論，取得pose2d_results (這部分需修改run_2d_pose支援返回資料)
-        result = run_2d_pose(
-            image_path=self.image_path,
-            output_dir="./../vis_results",
-            radius=self.radius,
-            thickness=self.thickness,
-            return_data=True
-        )
-        if not result:
-            self.label.setText("2D pose estimation failed.")
-            return
+    #     self.label.setText("Running 2D pose estimation...")
+    #     try:
+    #         det_results, pose2d_results = run_2d_pose(self.image_path, device='cpu')
+    #     except Exception as e:
+    #         self.label.setText(f"2D pose estimation error: {e}")
+    #         return
 
-        det_results, pose2d_results = result
+    #     self.label.setText("Running 3D pose estimation...")
+    #     try:
+    #         keypoints_3d_list = run_3d_pose(pose2d_results, device='cpu')
+    #     except Exception as e:
+    #         self.label.setText(f"3D pose estimation error: {e}")
+    #         return
 
-        try:
-            keypoints_3d = get_3d_keypoints(pose2d_results)
-            if keypoints_3d is None:
-                self.label.setText("3D keypoints extraction failed.")
-                return
-
-            self.label.setText("3D pose estimation complete!")
-            # 彈出新視窗
-            self.viewer3d = Pose3DViewer(keypoints_3d)
-            self.viewer3d.show()
-        except Exception as e:
-            self.label.setText(f"3D error: {e}")
+        # 跳出新視窗顯示3D骨架（可旋轉）
+        # show_3d_pose_window(keypoints_3d_list)
+        # self.label.setText("3D pose estimation complete!")
 
