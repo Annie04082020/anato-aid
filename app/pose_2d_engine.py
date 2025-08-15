@@ -5,17 +5,14 @@ from mmpose.apis import MMPoseInferencer
 # 使用模型别名创建推理器
 inferencer = MMPoseInferencer('human')
 
-# inferencer2 = MMPoseInferencer(  
-#     pose2d='configs/body_2d_keypoint/rtmpose/coco/rtmpose-m_8xb256-420e_coco-256x192.py',  
-#     pose2d='human',
-#     pose2d_weights='./../checkpoints/hrnet_w32_coco_256x192-c78dce93_20200708.pth'  # Your custom .pth file  
-#     pose2d='./../checkpoints/faster-rcnn_r50_fpn_1x_coco.py',
-#     pose2d_weights='./../checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
-# )
+inferencer2 = MMPoseInferencer(  
+ pose2d="./../rtmpose-m_8xb256-420e_coco-256x192.py",
+ pose2d_weights="./../checkpoints/rtmpose-m_8xb256-420e_humanart-256x192-8430627b_20230611.pth"   
+)
 
 def run_2d_pose(img_path,output_dir='./../2d_results',rad=6,thick=4,device="cpu"):
 # MMPoseInferencer采用了惰性推断方法，在给定输入时创建一个预测生成器
-    result_generator = inferencer(
+    result_generator = inferencer2(
         img_path, 
         show=False,
         radius=rad,          # Keypoint radius
