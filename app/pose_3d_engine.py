@@ -6,7 +6,7 @@ img_path = './../images/test3.jpg'   # 将img_path替换给你自己的路径
 inferencer = MMPoseInferencer(pose3d="human3d")
 
 
-def run_3d_pose(img_path,output_dir,rad=6,thick=4,device="cpu"):
+def run_3d_pose(img_path,output_dir="./../3d_results",rad=6,thick=4,device="cpu"):
 # MMPoseInferencer采用了惰性推断方法，在给定输入时创建一个预测生成器
     result_generator = inferencer(
         img_path, 
