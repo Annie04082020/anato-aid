@@ -84,6 +84,15 @@ class PoseEstimationUI(QMainWindow):
         params_group.setLayout(params_layout)
         right_layout.addWidget(params_group)
 
+        # Run Mode 選擇
+        mode_layout = QHBoxLayout()
+        mode_label = QLabel("Run Mode:")
+        self.mode_combo = QComboBox()
+        self.mode_combo.addItems(["Single Image", "Batch (Directory)"])
+        mode_layout.addWidget(mode_label)
+        mode_layout.addWidget(self.mode_combo)
+        params_layout.addLayout(mode_layout)
+        
         # --- 偵測操作區 ---
         actions_group = QGroupBox("Pose Estimation Actions")
         actions_layout = QVBoxLayout()
@@ -127,73 +136,50 @@ class PoseEstimationUI(QMainWindow):
         self.thickness_value_label.setText(str(value))
 
     def run_pose_estimation(self):
-        if not self.image_path:
-            self.label.setText("No image selected!")
-            return
-
-        output_dir = "./../2d_results"
-        os.makedirs(output_dir, exist_ok=True)
-
-        success = run_2d_pose(
-            img_path=self.image_path,
-            rad=self.radius,
-            thick=self.thickness,
-        )
-
-        if success:
-            result_img = os.path.join(output_dir, os.path.basename(self.image_path))
-            max_size = 580
-            self.img_preview.setPixmap(QPixmap(result_img).scaled(max_size, max_size, Qt.AspectRatioMode.KeepAspectRatio))
-            self.label.setText("Pose estimation complete!")
+        if self.mode_combo.currentText() == "Batch (Directory)":
+            self.run_batch(mode="2d")
         else:
-            self.label.setText("Failed to run pose estimation.")
+            self.run_single(mode="2d")
 
     def run_pose_estimation_3d(self):
-        if not self.image_path:
-            self.label.setText("No image selected!")
-            return
-
-        output_dir = "./../3d_results"
-        os.makedirs(output_dir, exist_ok=True)
-
-        success = run_3d_pose(
-            img_path=self.image_path,
-            rad=self.radius,
-            thick=self.thickness,
-        )
-
-        if success:
-            result_img = os.path.join(output_dir, os.path.basename(self.image_path))
-            max_size = 580
-            self.img_preview.setPixmap(QPixmap(result_img).scaled(max_size, max_size, Qt.AspectRatioMode.KeepAspectRatio))
-            self.label.setText("3D Pose estimation complete!")
+        if self.mode_combo.currentText() == "Batch (Directory)":
+            self.run_batch(mode="3d")
         else:
-            self.label.setText("Failed to run 3D pose estimation.")
+            self.run_single(mode="3d")
+
             
     def select_directory(self):
         dir_path = QFileDialog.getExistingDirectory(self, "Select Directory", "./images")
-        if not dir_path:
+        if dir_path:
+            self.image_path = dir_path
+            self.label.setText(f"Selected directory: {os.path.basename(dir_path)}")
+            self.img_preview.clear()  # 清除圖片預覽
+            
+    def run_batch(self, mode="2d"):
+        if not self.image_path or not os.path.isdir(self.image_path):
+            self.label.setText("No directory selected for batch mode!")
             return
 
-        # 過濾圖片檔
+        if mode == "2d":
+            output_dir = "./../2d_results"
+            runner = run_2d_pose
+        else:
+            output_dir = "./../3d_results"
+            runner = run_3d_pose
+
+        os.makedirs(output_dir, exist_ok=True)
+
         valid_ext = [".png", ".jpg", ".jpeg", ".bmp"]
-        img_files = [f for f in os.listdir(dir_path) if os.path.splitext(f)[1].lower() in valid_ext]
+        img_files = [f for f in os.listdir(self.image_path) if os.path.splitext(f)[1].lower() in valid_ext]
 
         if not img_files:
             self.label.setText("No images found in directory!")
             return
 
-        output_dir = "./../2d_results"
-        os.makedirs(output_dir, exist_ok=True)
-
         last_result = None
         for img_name in img_files:
-            img_path = os.path.join(dir_path, img_name)
-            success = run_2d_pose(
-                img_path=img_path,
-                rad=self.radius,
-                thick=self.thickness,
-            )
+            img_path = os.path.join(self.image_path, img_name)
+            success = runner(img_path=img_path, rad=self.radius, thick=self.thickness)
             if success:
                 last_result = os.path.join(output_dir, img_name)
 
@@ -202,4 +188,4 @@ class PoseEstimationUI(QMainWindow):
             self.img_preview.setPixmap(QPixmap(last_result).scaled(max_size, max_size, Qt.AspectRatioMode.KeepAspectRatio))
             self.label.setText(f"Processed {len(img_files)} images. Last result shown.")
         else:
-            self.label.setText("Failed to process images in directory.")
+            self.label.setText("Batch processing failed.")
