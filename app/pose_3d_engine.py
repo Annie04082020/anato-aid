@@ -13,7 +13,7 @@ def run_3d_pose(img_path,output_dir="./../3d_results",rad=6,thick=4,device="cpu"
         show=False,
         radius=rad,          # Keypoint radius
         thickness=thick,       # Line thickness
-        kpt_thr=0.35,       # Keypoint confidence threshold
+        kpt_thr=0.2,       # Keypoint confidence threshold
         draw_bbox=True,    # Draw bounding boxes
         skeleton_style='mmpose',  # 'mmpose' or 'openpose'
         vis_out_dir='./../3d_results',

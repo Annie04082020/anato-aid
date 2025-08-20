@@ -6,7 +6,7 @@ from pyqt_3d_viewer import Pose3DViewer
 import os
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QLabel, QFileDialog,
-    QVBoxLayout, QWidget, QSlider, QHBoxLayout, QGroupBox
+    QVBoxLayout, QWidget, QSlider, QHBoxLayout, QGroupBox, QComboBox
 )
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import Qt
@@ -41,6 +41,10 @@ class PoseEstimationUI(QMainWindow):
         btn_select = QPushButton("Select Image")
         btn_select.clicked.connect(self.select_image)
         img_group_layout.addWidget(btn_select)
+        
+        btn_select_dir = QPushButton("Select Directory")
+        btn_select_dir.clicked.connect(self.select_directory)
+        img_group_layout.addWidget(btn_select_dir)
 
         image_group.setLayout(img_group_layout)
         right_layout.addWidget(image_group)
@@ -165,3 +169,37 @@ class PoseEstimationUI(QMainWindow):
             self.label.setText("3D Pose estimation complete!")
         else:
             self.label.setText("Failed to run 3D pose estimation.")
+            
+    def select_directory(self):
+        dir_path = QFileDialog.getExistingDirectory(self, "Select Directory", "./images")
+        if not dir_path:
+            return
+
+        # 過濾圖片檔
+        valid_ext = [".png", ".jpg", ".jpeg", ".bmp"]
+        img_files = [f for f in os.listdir(dir_path) if os.path.splitext(f)[1].lower() in valid_ext]
+
+        if not img_files:
+            self.label.setText("No images found in directory!")
+            return
+
+        output_dir = "./../2d_results"
+        os.makedirs(output_dir, exist_ok=True)
+
+        last_result = None
+        for img_name in img_files:
+            img_path = os.path.join(dir_path, img_name)
+            success = run_2d_pose(
+                img_path=img_path,
+                rad=self.radius,
+                thick=self.thickness,
+            )
+            if success:
+                last_result = os.path.join(output_dir, img_name)
+
+        if last_result:
+            max_size = 580
+            self.img_preview.setPixmap(QPixmap(last_result).scaled(max_size, max_size, Qt.AspectRatioMode.KeepAspectRatio))
+            self.label.setText(f"Processed {len(img_files)} images. Last result shown.")
+        else:
+            self.label.setText("Failed to process images in directory.")
