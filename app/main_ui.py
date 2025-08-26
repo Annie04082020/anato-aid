@@ -155,6 +155,29 @@ class PoseEstimationUI(QMainWindow):
             self.label.setText(f"Selected directory: {os.path.basename(dir_path)}")
             self.img_preview.clear()  # 清除圖片預覽
             
+    def run_single(self, mode="2d"):
+        if not self.image_path or not os.path.isfile(self.image_path):
+            self.label.setText("No image selected for single mode!")
+            return
+
+        if mode == "2d":
+            output_dir = "./../2d_results"
+            runner = run_2d_pose
+        else:
+            output_dir = "./../3d_results"
+            runner = run_3d_pose
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        success = runner(img_path=self.image_path, rad=self.radius, thick=self.thickness)
+        if success:
+            result_path = os.path.join(output_dir, os.path.basename(self.image_path))
+            max_size = 580
+            self.img_preview.setPixmap(QPixmap(result_path).scaled(max_size, max_size, Qt.AspectRatioMode.KeepAspectRatio))
+            self.label.setText(f"Pose estimation completed: {os.path.basename(result_path)}")
+        else:
+            self.label.setText("Pose estimation failed.")
+    
     def run_batch(self, mode="2d"):
         if not self.image_path or not os.path.isdir(self.image_path):
             self.label.setText("No directory selected for batch mode!")
