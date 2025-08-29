@@ -10,9 +10,11 @@ inferencer2 = MMPoseInferencer(
  pose2d_weights="./../checkpoints/rtmpose-m_8xb256-420e_humanart-256x192-8430627b_20230611.pth"   
 )
 
+inferencer_whole = MMPoseInferencer(pose2d="wholebody")
+
 def run_2d_pose(img_path,output_dir='./../2d_results',rad=6,thick=4,device="cpu"):
 # MMPoseInferencer采用了惰性推断方法，在给定输入时创建一个预测生成器
-    result_generator = inferencer(
+    result_generator = inferencer2(
         img_path, 
         show=False,
         radius=rad,          # Keypoint radius
@@ -26,4 +28,6 @@ def run_2d_pose(img_path,output_dir='./../2d_results',rad=6,thick=4,device="cpu"
         pred_out_dir='./../2d_predictions_org'
     )
     result = next(result_generator)
+    predictions = result['predictions']
+    print(predictions)
     return result
